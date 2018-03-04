@@ -28,13 +28,15 @@ Once you have done this, make sure to add the /python/src/ directory to your PYT
 
 To show how Nearist works, we will run through the provided code to perform Nearest Neighbors classification of the MNIST dataset. 
 
-The `/datasets/MNIST/` directory contains instructions and code for generating the data that we will run on Nearist hardware. The README explains that we first train a convolutional neural network on the MNIST image classification task, and then use the trained network to transform raw images into 1024-dimensional vectors. We then convert these vectors of float data into vectors of integer data for use on Nearist hardware. This is accomplished by running:
+The `/datasets/MNIST/` directory contains instructions and code for generating the data that we will run on Nearist hardware. (Alternatively, you can skip this step and download the generated datasets directly from [here](https://drive.google.com/drive/folders/1tr-q_uhg6PVuQKIwnLDRMtRsrG2oyS8C)). The README explains that we first train a convolutional neural network on the MNIST image classification task, and then use the trained network to transform raw images into 1024-dimensional vectors. We then convert these vectors of float data into vectors of integer data for use on Nearist hardware. This is accomplished by running:
 
 `python mnist_feature_extraction.py` 
 
 and then: 
 
 `python map_to_integers.py`
+
+You should now have the h5 datasets stored in your `data` folder.
 
 The `/benchmarks/MNIST/` directory contains instructions and code for testing the accuracy and time of a Nearest Neighbors Classifier on CPU and GPU hardware under a variety of distance metrics (L1, L2, etc.), datatypes (uint8, float, etc.), and software packages (annoy, scikit-learn, etc.). For example, you can test the performance of a scikit-learn classifier under a variety of metrics by running:
 
