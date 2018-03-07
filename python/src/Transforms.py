@@ -111,7 +111,7 @@ class Transforms:
     def learn_logarithmic(self, X):
         """
         A logarthmic scale mapping function for conversion from float to integers
-        in range [0,256].
+        in range [0,self.max_int].
 
         This function learns and stores the log maximum value from matrix X and
         stores it as self.logarthmic_max.
@@ -133,8 +133,8 @@ class Transforms:
             X     - Matrix of floating point values to be converted to integers.
 
         Returns:
-                  - Matrix of integer values in range [0,256].
+                  - Matrix of integer values in range [0,self.max_int].
 
         """
         # 1 is added in order to avoid taking the log of 0, which is undefined
-        return np.round(np.log(X+1) / self.logarithmic_max * 255).astype(self.int_size)
+        return np.round(np.log(X+1) / self.logarithmic_max * self.max_int).astype(self.int_size)
