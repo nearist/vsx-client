@@ -97,13 +97,15 @@ class Client:
         if status is None:
             return self.__on_request_complete(request)
 
-    def open(self, host, port):
+    def open(self, host, port, api_key):
         """
         Open a socket for communication with the Nearist appliance.
         
         Parameters:
           host - IP address of the Nearist appliance.
           port - Port number for accessing the Nearist appliance.
+          api_key - Unique user access key which is required to access the
+                    appliance.
         
         Returns:
           None
@@ -119,14 +121,14 @@ class Client:
         # Connect to the host.
         self.sock.connect((host, port))
 
+        # Store the API key        
+        self.api_key = api_key
+
     def close(self):
         """
         Close the socket to the Nearist appliance.
         """
         self.sock.close()
-
-    def connect(self, api_key):
-        self.api_key = api_key
 
     def reset(self):
         """
