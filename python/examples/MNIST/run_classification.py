@@ -16,8 +16,6 @@ def main():
     print("Distance:  L1")
     print("=========================")
 
-    print("\nClassifying test vectors with mapped integer and L1...")
-
     print("\nLoading dataset...")
     sys.stdout.flush()
 
@@ -29,13 +27,20 @@ def main():
     X_test = h5py.File('./data/X_test_uint8.h5', 'r')['X_test'][:]
 
     print("  Test set     [%5d x %d]" % (len(X_test), len(X_test[0])))
+    sys.stdout.flush()
 
     ###########################################################################
     #  Setup Nearist hardware
     ###########################################################################
 
+    print("\nOpening connection to appliance...")
+    sys.stdout.flush()
+    
     c = Client()
-    c.open("000.000.0.00", 5555)
+    
+    # Establish a connection to the appliance.  
+    # NOTE - These values should be updated with the ones you received.
+    c.open(host='000.000.000.000', port=0, api_key='')
 
     c.reset()
 
@@ -47,9 +52,15 @@ def main():
     #  Load the dataset (the training vectors) into Nearist DRAM
     ###########################################################################
 
+    print("\nLoading dataset vectors from appliance harddisk...")
+    sys.stdout.flush()
+    
     # Load the training vectors *remotely* from the appliance harddisk.
-    c.load_dataset_file(filename='/nearist-datasets/mnist/X_train_uint8.h5',
+    c.load_dataset_file(file_name='/nearist/MNIST/X_train_uint8.h5',
                         dataset_name='X_train')
+
+    print("    Loaded.")
+    sys.stdout.flush()
 
     ###########################################################################
     #  Run classification experiment
@@ -59,9 +70,10 @@ def main():
     t0 = time.time()
 
     print("\nRunning %d-NN Classification..." % k)
+    sys.stdout.flush()
 
     # Perform the queries.    
-    result_batch = c.query(X_test)
+    result_batch = c.query(X_test.tolist())
 
     numRight = 0
 
