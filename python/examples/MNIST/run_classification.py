@@ -26,10 +26,8 @@ def main():
     # into memory, so [:] loads the whole thing.
     y_train = h5py.File('./data/y_train.h5', 'r')['y_train'][:]
     y_test = h5py.File('./data/y_test.h5', 'r')['y_test'][:]
-    X_train = h5py.File('./data/X_train_float.h5', 'r')['X_train'][:]
-    X_test = h5py.File('./data/X_test_float.h5', 'r')['X_test'][:]
+    X_test = h5py.File('./data/X_test_uint8.h5', 'r')['X_test'][:]
 
-    print("  Training set [%5d x %d]" % (len(X_train), len(X_train[0])))
     print("  Test set     [%5d x %d]" % (len(X_test), len(X_test[0])))
 
     ###########################################################################
@@ -49,7 +47,7 @@ def main():
     #  Load the dataset (the training vectors) into Nearist DRAM
     ###########################################################################
 
-    # Load the training vectors.
+    # Load the training vectors *remotely* from the appliance harddisk.
     c.load_dataset_file(filename='/nearist-datasets/mnist/X_train_uint8.h5',
                         dataset_name='X_train')
 
@@ -60,8 +58,9 @@ def main():
     # Time this step.
     t0 = time.time()
 
-    # Perform the queries.
-    print("\nMultiple query")
+    print("\nRunning %d-NN Classification..." % k)
+
+    # Perform the queries.    
     result_batch = c.query(X_test)
 
     numRight = 0
