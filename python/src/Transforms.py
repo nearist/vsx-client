@@ -81,6 +81,11 @@ class Transforms:
             num_std - Number of standard deviations to saturate at.
 
         """
+		# Check that values are zero-centered
+		print "The logistic function requires that your data is zero-centered. Please\
+		check that your data is zero-centered before continuing."
+		
+		# TODO: automatically zero-center the data
 
         # Calculate the saturation point.
         self.x_sat = num_std * np.std(X)
@@ -120,6 +125,12 @@ class Transforms:
             X     - Matrix of floating point values to learn the maximum value
                     from.
         """
+        
+		# Check that all the values are positive
+		assert data.all() >= 0, "The logarithmic transform requires that your data is \
+		greater than or equal to zero. Please check that your data is greater than or \
+		equal to zero before continuing."
+
         # np.max finds the maximum of all values in the dataset.
         # 1 is added in order to avoid taking the log of 0, which is undefined
         self.logarithmic_max = np.log(np.amax(X)+1)
