@@ -16,13 +16,21 @@ The rest of the repository provides example code for applications of Nearist har
 - `/benchmarks` contains code for running and benchmarking Nearest Neighbor searches using traditional hardware 
 - `/python/examples` contains code for running Nearest Neighbor searches using Nearist servers
 
+Please visit the [wiki](https://github.com/nearist/nearist/wiki) for documentation, tutorials, and example applications.
 
 
-## Preliminaries
+
+## Preliminaries and Installation
 
 You will have to obtain an API key in order to gain access to Nearist servers. 
 
-Once you have done this, make sure to add the /python/src/ directory to your PYTHONPATH and to update the scripts in `python/examples` to include the API access key and supplied IP address.
+
+
+Once you have done this, you can install the client library with pip:
+
+`pip install nearist`
+
+or you can clone this repository. If you choose to clone this repository make sure to add the /python/src/ directory to your PYTHONPATH and to update the scripts in `python/examples` to include the API access key and supplied IP address.
 
 ## Example: MNIST
 
