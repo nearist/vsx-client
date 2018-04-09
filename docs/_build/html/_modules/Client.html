@@ -1,0 +1,400 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Client &mdash; nearist 1.0.2 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="nearist 1.0.2 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for Client</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
+
+<span class="kn">from</span> <span class="nn">Common</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+
+
+<div class="viewcode-block" id="Client"><a class="viewcode-back" href="../Client.html#Client.Client">[docs]</a><span class="k">class</span> <span class="nc">Client</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class provides the Python interface for communicating with the Nearist appliances.</span>
+
+<span class="sd">    Commands are communicated via TCP/IP to the appliance server.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sock</span> <span class="o">=</span> <span class="bp">None</span>
+        
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">__recvall</span><span class="p">(</span><span class="n">sock</span><span class="p">,</span> <span class="n">length</span><span class="p">):</span>
+        <span class="c1"># Helper function to recv &#39;length&#39; bytes or return None if EOF is hit.</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="nb">bytearray</span><span class="p">()</span>
+
+        <span class="c1"># Loop until we&#39;ve received &#39;length&#39; bytes.        </span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">length</span><span class="p">:</span>
+
+            <span class="c1"># Receive the remaining bytes. The amount of data returned might</span>
+            <span class="c1"># be less than &#39;length&#39;.</span>
+            <span class="n">packet</span> <span class="o">=</span> <span class="n">sock</span><span class="o">.</span><span class="n">recv</span><span class="p">(</span><span class="n">length</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
+
+            <span class="c1"># If we received 0 bytes, the connection has been closed...            </span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">packet</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+
+            <span class="c1"># Append the received bytes to &#39;data&#39;.    </span>
+            <span class="n">data</span> <span class="o">+=</span> <span class="n">packet</span>
+
+        <span class="c1"># Return the &#39;length&#39; bytes of received data.</span>
+        <span class="k">return</span> <span class="n">data</span>
+
+    <span class="k">def</span> <span class="nf">__on_request_complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Receives the response from the appliance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Receive 36 bytes (the side of the response message header).</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">Client</span><span class="o">.</span><span class="n">__recvall</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sock</span><span class="p">,</span> <span class="mi">36</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">buf</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+
+            <span class="c1"># Unpack the response header into a Response object.</span>
+            <span class="n">r</span> <span class="o">=</span> <span class="n">Response</span><span class="p">()</span>
+            <span class="n">r</span><span class="o">.</span><span class="n">unpack_header</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">status</span> <span class="o">!=</span> <span class="n">Status</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Nearist error: </span><span class="si">%s</span><span class="s2"> &quot;</span> <span class="o">%</span> <span class="n">Status</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">status</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
+
+                <span class="c1"># If there is data to receive for this response...</span>
+                <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">body_length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="c1"># Receive the body of this response.</span>
+                    <span class="n">r</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">Client</span><span class="o">.</span><span class="n">__recvall</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sock</span><span class="p">,</span> <span class="n">r</span><span class="o">.</span><span class="n">body_length</span><span class="p">)</span>
+                    <span class="n">r</span><span class="o">.</span><span class="n">body_checksum</span> <span class="o">=</span> <span class="n">Client</span><span class="o">.</span><span class="n">__recvall</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sock</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                        <span class="n">length</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">body_length</span> <span class="o">&gt;&gt;</span> <span class="mi">3</span>
+                        <span class="k">if</span> <span class="n">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                            <span class="n">body</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">((</span><span class="s2">&quot;=&quot;</span> <span class="o">+</span> <span class="p">(</span><span class="s2">&quot;Q&quot;</span> <span class="o">*</span> <span class="n">length</span><span class="p">)),</span> <span class="n">r</span><span class="o">.</span><span class="n">body</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+                            <span class="k">if</span> <span class="n">request</span><span class="o">.</span><span class="n">attribute_1</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+                                    <span class="k">if</span> <span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span> <span class="ow">and</span> <span class="n">body</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span><span class="p">:</span>
+                                        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;ds_id&#39;</span><span class="p">:</span> <span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;distance&#39;</span><span class="p">:</span> <span class="n">body</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]})</span>
+                                    <span class="k">else</span><span class="p">:</span>
+                                        <span class="k">break</span>
+                            <span class="k">elif</span> <span class="n">request</span><span class="o">.</span><span class="n">attribute_1</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                                <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+                                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">length</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+                                    <span class="k">if</span> <span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">!=</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span> <span class="ow">and</span> <span class="n">body</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span><span class="p">:</span>
+                                        <span class="n">result</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;ds_id&#39;</span><span class="p">:</span> <span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="s1">&#39;distance&#39;</span><span class="p">:</span> <span class="n">body</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]})</span>
+                                    <span class="k">else</span><span class="p">:</span>
+                                        <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">result</span><span class="p">)</span>
+                                        <span class="n">result</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Read error.&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">results</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">attribute_0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s2">&quot;Read error.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">results</span>
+
+    <span class="k">def</span> <span class="nf">__request</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+        <span class="c1"># &#39;sendall&#39; will send all bytes in the request before returning.        </span>
+        <span class="n">status</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">sock</span><span class="o">.</span><span class="n">sendall</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">pack</span><span class="p">())</span>
+
+        <span class="c1"># If the request was sent successfully... </span>
+        <span class="c1"># (&#39;sendall&#39; returns None if successful.)</span>
+        <span class="k">if</span> <span class="n">status</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__on_request_complete</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Client.open"><a class="viewcode-back" href="../Client.html#Client.Client.open">[docs]</a>    <span class="k">def</span> <span class="nf">open</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">api_key</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Open a socket for communication with the Nearist appliance.</span>
+<span class="sd">        </span>
+<span class="sd">        :type host: string</span>
+<span class="sd">        :param host: IP address of the Nearist appliance.</span>
+<span class="sd">        </span>
+<span class="sd">        :type port: integer</span>
+<span class="sd">        :param port: Port number for accessing the Nearist appliance.</span>
+<span class="sd">        </span>
+<span class="sd">        :type api_key: string</span>
+<span class="sd">        :param api_key: Unique user access key which is required to access the</span>
+<span class="sd">                    appliance.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Convert the host name and port to a 5-tuple of arguments.</span>
+        <span class="c1"># We just need the &quot;address family&quot; parameter.</span>
+        <span class="n">address_info</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">getaddrinfo</span><span class="p">(</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+
+        <span class="c1"># Create a new socket (the host and port are specified in &#39;connect&#39;).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sock</span> <span class="o">=</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">address_info</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_STREAM</span><span class="p">)</span>
+
+        <span class="c1"># Connect to the host.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sock</span><span class="o">.</span><span class="n">connect</span><span class="p">((</span><span class="n">host</span><span class="p">,</span> <span class="n">port</span><span class="p">))</span>
+
+        <span class="c1"># Store the API key        </span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">api_key</span></div>
+
+<div class="viewcode-block" id="Client.close"><a class="viewcode-back" href="../Client.html#Client.Client.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Close the socket to the Nearist appliance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sock</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Client.reset"><a class="viewcode-back" href="../Client.html#Client.Client.reset">[docs]</a>    <span class="k">def</span> <span class="nf">reset</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reset the Nearist hardware, clearing all stored data.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Create and submit a reset request.</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span> <span class="n">Command</span><span class="o">.</span><span class="n">RESET</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Client.reset_timer"><a class="viewcode-back" href="../Client.html#Client.Client.reset_timer">[docs]</a>    <span class="k">def</span> <span class="nf">reset_timer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reset board time measurement timer.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span> <span class="n">Command</span><span class="o">.</span><span class="n">RESET_TIMER</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Client.get_timer_value"><a class="viewcode-back" href="../Client.html#Client.Client.get_timer_value">[docs]</a>    <span class="k">def</span> <span class="nf">get_timer_value</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get board time measurement in nanoseconds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span> <span class="n">Command</span><span class="o">.</span><span class="n">GET_TIMER</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Client.set_distance_mode"><a class="viewcode-back" href="../Client.html#Client.Client.set_distance_mode">[docs]</a>    <span class="k">def</span> <span class="nf">set_distance_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set the distance metric.</span>
+<span class="sd">        </span>
+<span class="sd">        :type mode: Common.DistanceMode</span>
+<span class="sd">        :param mode: Distance metric from Common.DistanceMode        </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Create and submit the distance mode request.</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
+            <span class="n">Command</span><span class="o">.</span><span class="n">DISTANCE_MODE</span><span class="p">,</span>
+            <span class="n">mode</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Client.set_query_mode"><a class="viewcode-back" href="../Client.html#Client.Client.set_query_mode">[docs]</a>    <span class="k">def</span> <span class="nf">set_query_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mode</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set query mode</span>
+<span class="sd">        </span>
+<span class="sd">        :type mode: Common.QueryMode</span>
+<span class="sd">        :param mode: Query mode from Common.QueryMode        </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
+            <span class="n">Command</span><span class="o">.</span><span class="n">QUERY_MODE</span><span class="p">,</span>
+            <span class="n">mode</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Client.set_read_count"><a class="viewcode-back" href="../Client.html#Client.Client.set_read_count">[docs]</a>    <span class="k">def</span> <span class="nf">set_read_count</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">count</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set query result count for KNN_D/KNN_A query mode(s)</span>
+<span class="sd">        </span>
+<span class="sd">        :type count: integer</span>
+<span class="sd">        :param count: The top &#39;K&#39; values in KNN </span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
+            <span class="n">Command</span><span class="o">.</span><span class="n">READ_COUNT</span><span class="p">,</span>
+            <span class="n">count</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Client.set_threshold"><a class="viewcode-back" href="../Client.html#Client.Client.set_threshold">[docs]</a>    <span class="k">def</span> <span class="nf">set_threshold</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">threshold_lower</span><span class="p">,</span> <span class="n">threshold_upper</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set query threshold for GT/LT/RANGE query mode(s)</span>
+<span class="sd">        </span>
+<span class="sd">        :type threshold_lower: integer</span>
+<span class="sd">        :param threshold_lower: Lower threshold value.</span>
+<span class="sd">        </span>
+<span class="sd">        :type threshold_upper: integer</span>
+<span class="sd">        :param threshold_upper: Upper threshold value, defaults to None.</span>
+<span class="sd">         </span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">threshold_upper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
+                <span class="n">Command</span><span class="o">.</span><span class="n">THRESHOLD</span><span class="p">,</span>
+                <span class="n">threshold_lower</span><span class="p">,</span>
+                <span class="n">threshold_upper</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
+                <span class="n">Command</span><span class="o">.</span><span class="n">THRESHOLD</span><span class="p">,</span>
+                <span class="n">threshold_lower</span>
+            <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Client.ds_load"><a class="viewcode-back" href="../Client.html#Client.Client.ds_load">[docs]</a>    <span class="k">def</span> <span class="nf">ds_load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vectors</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load dataset to Nearist appliance</span>
+<span class="sd">        </span>
+<span class="sd">        :type vectors: </span>
+<span class="sd">        :param vectors: List of vectors (component lists)</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vectors</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
+                    <span class="n">Command</span><span class="o">.</span><span class="n">DS_LOAD</span><span class="p">,</span>
+                    <span class="n">attribute_0</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                    <span class="n">attribute_1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">body_length</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">vectors</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
+                    <span class="n">body</span><span class="o">=</span><span class="n">vectors</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid argument&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid argument&#39;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Client.load_dataset_file"><a class="viewcode-back" href="../Client.html#Client.Client.load_dataset_file">[docs]</a>    <span class="k">def</span> <span class="nf">load_dataset_file</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="n">dataset_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load local dataset to Nearist appliance</span>
+<span class="sd">        </span>
+<span class="sd">        :type file_name: string</span>
+<span class="sd">        :param file_name: Local dataset file name</span>
+<span class="sd">        </span>
+<span class="sd">        :type dataset_name: string</span>
+<span class="sd">        :param dataset_name: Local dataset name</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">root</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="s2">&quot;fileName&quot;</span><span class="p">:</span> <span class="n">file_name</span><span class="p">,</span> <span class="s2">&quot;datasetName&quot;</span><span class="p">:</span> <span class="n">dataset_name</span><span class="p">})</span>
+        <span class="n">request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
+            <span class="n">Command</span><span class="o">.</span><span class="n">DS_LOAD</span><span class="p">,</span>
+            <span class="n">attribute_0</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+            <span class="n">attribute_1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">body_length</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">root</span><span class="p">),</span>
+            <span class="n">body</span><span class="o">=</span><span class="n">root</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Client.query"><a class="viewcode-back" href="../Client.html#Client.Client.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vectors</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Query for single/multiple vector(s)</span>
+<span class="sd">        </span>
+<span class="sd">        :type vectors: list or list of lists</span>
+<span class="sd">        :param vectors: List of components for single query / List of vectors (component lists) for multipel query</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vectors</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
+                    <span class="n">Command</span><span class="o">.</span><span class="n">QUERY</span><span class="p">,</span>
+                    <span class="n">attribute_0</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                    <span class="n">attribute_1</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                    <span class="n">body_length</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">vectors</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vectors</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span>
+                    <span class="n">body</span><span class="o">=</span><span class="n">vectors</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">request</span> <span class="o">=</span> <span class="n">Request</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
+                    <span class="n">Command</span><span class="o">.</span><span class="n">QUERY</span><span class="p">,</span>
+                    <span class="n">attribute_0</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">vectors</span><span class="p">),</span>
+                    <span class="n">body_length</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">vectors</span><span class="p">),</span>
+                    <span class="n">body</span><span class="o">=</span><span class="n">vectors</span>
+                <span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__request</span><span class="p">(</span><span class="n">request</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Invalid argument&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Nearist.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

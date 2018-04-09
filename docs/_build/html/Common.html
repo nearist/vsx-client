@@ -1,0 +1,214 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Common &mdash; nearist 1.0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="nearist 1.0.2 documentation" href="index.html" />
+    <link rel="prev" title="Client" href="Client.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-Common">
+<span id="common"></span><h1>Common<a class="headerlink" href="#module-Common" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="Common.DistanceMode">
+<em class="property">class </em><code class="descclassname">Common.</code><code class="descname">DistanceMode</code><a class="reference internal" href="_modules/Common.html#DistanceMode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Common.DistanceMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Possible distance metric configurations.</p>
+<p>The distance metric can not be changed from software, but the software
+needs to be configured for the hardware&#8217;s distance metric.</p>
+<dl class="attribute">
+<dt id="Common.DistanceMode.BIT_OR">
+<code class="descname">BIT_OR</code><em class="property"> = &lt;DistanceMode.BIT_OR: 4&gt;</em><a class="headerlink" href="#Common.DistanceMode.BIT_OR" title="Permalink to this definition">¶</a></dt>
+<dd><p>Jaccard (a.k.a. Tanimoto) similarity.</p>
+<p>The Jaccard similarity metric only applies for 1-bit components.
+It is calculated by dividing the size of the intersection between
+two bit sets by the size of their union.</p>
+<p>For bit-vectors, the size of the intersection is determined by
+performing bitwise AND and counting the number of bits set. The size
+of the union is determined by performing bitwise OR and counting the
+number of bits set.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Common.DistanceMode.HAMMING">
+<code class="descname">HAMMING</code><em class="property"> = &lt;DistanceMode.HAMMING: 2&gt;</em><a class="headerlink" href="#Common.DistanceMode.HAMMING" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bitwise AND similarity.</p>
+<p>This similarity metric only applies for 1-bit components.
+It is calculating by performing AND and counting the resulting
+number of bits.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Common.DistanceMode.LMAX">
+<code class="descname">LMAX</code><em class="property"> = &lt;DistanceMode.LMAX: 1&gt;</em><a class="headerlink" href="#Common.DistanceMode.LMAX" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hamming distance.</p>
+<p>The Hamming distance is calculated by comparing each component of
+the vectors and counting those which are not equal.
+The components could be single bits or integers.
+In the case of single bit components, the Hamming distance is
+equivalent to performing XOR and counting the number of bits.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Common.DistanceMode.NO_DISTANCE_MODE">
+<code class="descname">NO_DISTANCE_MODE</code><em class="property"> = &lt;DistanceMode.NO_DISTANCE_MODE: 65535&gt;</em><a class="headerlink" href="#Common.DistanceMode.NO_DISTANCE_MODE" title="Permalink to this definition">¶</a></dt>
+<dd><p>L1 distance, a.k.a. the Manhattan or Taxi Cab distance.</p>
+<p>The L1 distance is calculated as the sum of absolute differences.
+It&#8217;s used as a more computationally efficient alternative to the L2
+distance. It is also a suitable alternative to the Cosine distance
+provided that the vectors have been normalized first.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Common.QueryMode">
+<em class="property">class </em><code class="descclassname">Common.</code><code class="descname">QueryMode</code><a class="reference internal" href="_modules/Common.html#QueryMode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Common.QueryMode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Possible query mode configurations.</p>
+<dl class="attribute">
+<dt id="Common.QueryMode.ALL">
+<code class="descname">ALL</code><em class="property"> = &lt;QueryMode.ALL: 0&gt;</em><a class="headerlink" href="#Common.QueryMode.ALL" title="Permalink to this definition">¶</a></dt>
+<dd><p>k-NN ascending, lowest values returned first.</p>
+<p>This mode is typically used with distance metrics (as opposed to
+similarity metrics) since lowest distance implies the best match.</p>
+<p>See also Client.set_read_count</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Common.QueryMode.GT">
+<code class="descname">GT</code><em class="property"> = &lt;QueryMode.GT: 3&gt;</em><a class="headerlink" href="#Common.QueryMode.GT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return only results with a value less than the set threshold.</p>
+<p>Results with a value greater than or equal to the threshold are
+<em>not</em> returned.</p>
+<p>This mode is typically used with distance metrics (as opposed to
+similarity metrics) since distances <em>below</em> a threshold implies
+the best match.</p>
+<p>See also Client.set_threshold</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Common.QueryMode.KNN_A">
+<code class="descname">KNN_A</code><em class="property"> = &lt;QueryMode.KNN_A: 1&gt;</em><a class="headerlink" href="#Common.QueryMode.KNN_A" title="Permalink to this definition">¶</a></dt>
+<dd><p>k-NN descending, highest values returned first.</p>
+<p>This mode is typically used with similarity metrics (as opposed to
+distance metrics) since highest similarity implies the best match.</p>
+<p>See also set_read_count</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="Common.QueryMode.KNN_D">
+<code class="descname">KNN_D</code><em class="property"> = &lt;QueryMode.KNN_D: 2&gt;</em><a class="headerlink" href="#Common.QueryMode.KNN_D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return only results with a value greater than the set threshold.</p>
+<p>Results with a value less than or equal to the threshold are <em>not</em>
+returned.</p>
+<p>This mode is typically used with similarity metrics (as opposed to
+distance metrics) since similarities <em>above</em> a threshold implies
+the best match.</p>
+<p>See also Client.set_threshold</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="Common.Response">
+<em class="property">class </em><code class="descclassname">Common.</code><code class="descname">Response</code><span class="sig-paren">(</span><em>command=&lt;Command.RESET: 0&gt;</em>, <em>status=&lt;Status.SUCCESS: 0&gt;</em>, <em>attribute_0=0</em>, <em>attribute_1=0</em>, <em>body_length=0</em>, <em>body=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/Common.html#Response"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#Common.Response" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class representing a response received from the appliance.</p>
+<dl class="docutils">
+<dt>The response header is 36 bytes:</dt>
+<dd>(4) command
+(4) status
+(8) attribute_0
+(8) attribute_1
+(8) body_length
+(4) header checksum</dd>
+</dl>
+<p>The body is received over the socket separately from the header.
+First we receive 36 bytes to receive the header, then this tells us
+how many bytes to receive for the body.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="Client.html" title="previous chapter">Client</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/Common.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Nearist.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="_sources/Common.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

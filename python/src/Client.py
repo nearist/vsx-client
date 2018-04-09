@@ -13,6 +13,7 @@ class Client:
 
     def __init__(self):
         self.sock = None
+        
 
     @staticmethod
     def __recvall(sock, length):
@@ -101,14 +102,16 @@ class Client:
         """
         Open a socket for communication with the Nearist appliance.
         
-        Parameters:
-          host - IP address of the Nearist appliance.
-          port - Port number for accessing the Nearist appliance.
-          api_key - Unique user access key which is required to access the
-                    appliance.
+        :type host: string
+        :param host: IP address of the Nearist appliance.
         
-        Returns:
-          None
+        :type port: integer
+        :param port: Port number for accessing the Nearist appliance.
+        
+        :type api_key: string
+        :param api_key: Unique user access key which is required to access the
+                    appliance.
+
         """
 
         # Convert the host name and port to a 5-tuple of arguments.
@@ -158,8 +161,10 @@ class Client:
     def set_distance_mode(self, mode):
         """
         Set the distance metric.
-        :param mode: Common.DistanceMode
-        :return:
+        
+        :type mode: Common.DistanceMode
+        :param mode: Distance metric from Common.DistanceMode        
+
         """
 
         # Create and submit the distance mode request.
@@ -173,8 +178,10 @@ class Client:
     def set_query_mode(self, mode):
         """
         Set query mode
-        :param mode: Common.QueryMode
-        :return:
+        
+        :type mode: Common.QueryMode
+        :param mode: Query mode from Common.QueryMode        
+
         """
 
         request = Request(
@@ -187,8 +194,10 @@ class Client:
     def set_read_count(self, count):
         """
         Set query result count for KNN_D/KNN_A query mode(s)
-        :param count: Integer
-        :return:
+        
+        :type count: integer
+        :param count: The top 'K' values in KNN 
+
         """
 
         request = Request(
@@ -201,9 +210,13 @@ class Client:
     def set_threshold(self, threshold_lower, threshold_upper=None):
         """
         Set query threshold for GT/LT/RANGE query mode(s)
-        :param threshold_lower: Integer
-        :param threshold_upper: Integer
-        :return:
+        
+        :type threshold_lower: integer
+        :param threshold_lower: Lower threshold value.
+        
+        :type threshold_upper: integer
+        :param threshold_upper: Upper threshold value, defaults to None.
+         
         """
 
         if threshold_upper is not None:
@@ -224,8 +237,10 @@ class Client:
     def ds_load(self, vectors):
         """
         Load dataset to Nearist appliance
+        
+        :type vectors: 
         :param vectors: List of vectors (component lists)
-        :return:
+
         """
 
         if isinstance(vectors, list):
@@ -247,9 +262,13 @@ class Client:
     def load_dataset_file(self, file_name, dataset_name):
         """
         Load local dataset to Nearist appliance
+        
+        :type file_name: string
         :param file_name: Local dataset file name
+        
+        :type dataset_name: string
         :param dataset_name: Local dataset name
-        :return:
+
         """
 
         root = json.dumps({"fileName": file_name, "datasetName": dataset_name})
@@ -266,8 +285,10 @@ class Client:
     def query(self, vectors):
         """
         Query for single/multiple vector(s)
-        :param vectors: List of components for single query / List of vectors (component lists) for multiple query
-        :return:
+        
+        :type vectors: list or list of lists
+        :param vectors: List of components for single query / List of vectors (component lists) for multipel query
+
         """
 
         if isinstance(vectors, list):

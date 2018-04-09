@@ -1,0 +1,323 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Common &mdash; nearist 1.0.2 documentation</title>
+    
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '1.0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="top" title="nearist 1.0.2 documentation" href="../index.html" />
+    <link rel="up" title="Module code" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for Common</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">struct</span>
+<span class="kn">import</span> <span class="nn">binascii</span>
+
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">IntEnum</span>
+
+<div class="viewcode-block" id="DistanceMode"><a class="viewcode-back" href="../Common.html#Common.DistanceMode">[docs]</a><span class="k">class</span> <span class="nc">DistanceMode</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">     Possible distance metric configurations.</span>
+
+<span class="sd">     The distance metric can not be changed from software, but the software</span>
+<span class="sd">     needs to be configured for the hardware&#39;s distance metric.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">NO_DISTANCE_MODE</span> <span class="o">=</span> <span class="mh">0xFFFF</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    L1 distance, a.k.a. the Manhattan or Taxi Cab distance.</span>
+
+<span class="sd">    The L1 distance is calculated as the sum of absolute differences.</span>
+<span class="sd">    It&#39;s used as a more computationally efficient alternative to the L2</span>
+<span class="sd">    distance. It is also a suitable alternative to the Cosine distance</span>
+<span class="sd">    provided that the vectors have been normalized first.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">L1</span> <span class="o">=</span> <span class="mh">0x0000</span>
+    <span class="n">LMAX</span> <span class="o">=</span> <span class="mh">0x0001</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Hamming distance.</span>
+
+<span class="sd">    The Hamming distance is calculated by comparing each component of</span>
+<span class="sd">    the vectors and counting those which are not equal.</span>
+<span class="sd">    The components could be single bits or integers.</span>
+<span class="sd">    In the case of single bit components, the Hamming distance is</span>
+<span class="sd">    equivalent to performing XOR and counting the number of bits.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">HAMMING</span> <span class="o">=</span> <span class="mh">0x0002</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Bitwise AND similarity.</span>
+
+<span class="sd">    This similarity metric only applies for 1-bit components.</span>
+<span class="sd">    It is calculating by performing AND and counting the resulting</span>
+<span class="sd">    number of bits.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">BIT_AND</span> <span class="o">=</span> <span class="mh">0x0003</span>
+    <span class="n">BIT_OR</span> <span class="o">=</span> <span class="mh">0x0004</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Jaccard (a.k.a. Tanimoto) similarity.</span>
+
+<span class="sd">    The Jaccard similarity metric only applies for 1-bit components.</span>
+<span class="sd">    It is calculated by dividing the size of the intersection between</span>
+<span class="sd">    two bit sets by the size of their union.</span>
+
+<span class="sd">    For bit-vectors, the size of the intersection is determined by</span>
+<span class="sd">    performing bitwise AND and counting the number of bits set. The size</span>
+<span class="sd">    of the union is determined by performing bitwise OR and counting the</span>
+<span class="sd">    number of bits set.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">JACCARD</span> <span class="o">=</span> <span class="mh">0x0005</span></div>
+
+
+<div class="viewcode-block" id="QueryMode"><a class="viewcode-back" href="../Common.html#Common.QueryMode">[docs]</a><span class="k">class</span> <span class="nc">QueryMode</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Possible query mode configurations.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">NO_QUERY_MODE</span> <span class="o">=</span> <span class="mh">0xFFFF</span>
+    <span class="n">ALL</span> <span class="o">=</span> <span class="mh">0x0000</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    k-NN ascending, lowest values returned first.</span>
+
+<span class="sd">    This mode is typically used with distance metrics (as opposed to</span>
+<span class="sd">    similarity metrics) since lowest distance implies the best match.</span>
+
+<span class="sd">    See also Client.set_read_count</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">KNN_A</span> <span class="o">=</span> <span class="mh">0x0001</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    k-NN descending, highest values returned first.</span>
+
+<span class="sd">    This mode is typically used with similarity metrics (as opposed to</span>
+<span class="sd">    distance metrics) since highest similarity implies the best match.</span>
+
+<span class="sd">    See also set_read_count</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">KNN_D</span> <span class="o">=</span> <span class="mh">0x0002</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return only results with a value greater than the set threshold.</span>
+
+<span class="sd">    Results with a value less than or equal to the threshold are *not*</span>
+<span class="sd">    returned.</span>
+
+<span class="sd">    This mode is typically used with similarity metrics (as opposed to</span>
+<span class="sd">    distance metrics) since similarities *above* a threshold implies</span>
+<span class="sd">    the best match.</span>
+
+<span class="sd">    See also Client.set_threshold</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">GT</span> <span class="o">=</span> <span class="mh">0x0003</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return only results with a value less than the set threshold.</span>
+
+<span class="sd">    Results with a value greater than or equal to the threshold are</span>
+<span class="sd">    *not* returned.</span>
+
+<span class="sd">    This mode is typically used with distance metrics (as opposed to</span>
+<span class="sd">    similarity metrics) since distances *below* a threshold implies</span>
+<span class="sd">    the best match.</span>
+
+<span class="sd">    See also Client.set_threshold</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">LT</span> <span class="o">=</span> <span class="mh">0x0004</span>
+    <span class="n">EQ</span> <span class="o">=</span> <span class="mh">0x0005</span>
+    <span class="n">RANGE</span> <span class="o">=</span> <span class="mh">0x0006</span></div>
+
+
+<span class="k">class</span> <span class="nc">Command</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">RESET</span> <span class="o">=</span> <span class="mh">0x00</span>
+    <span class="n">DISTANCE_MODE</span> <span class="o">=</span> <span class="mh">0x01</span>
+    <span class="n">QUERY_MODE</span> <span class="o">=</span> <span class="mh">0x02</span>
+    <span class="n">READ_COUNT</span> <span class="o">=</span> <span class="mh">0x03</span>
+    <span class="n">THRESHOLD</span> <span class="o">=</span> <span class="mh">0x04</span>
+    <span class="n">DS_LOAD</span> <span class="o">=</span> <span class="mh">0x05</span>
+    <span class="n">QUERY</span> <span class="o">=</span> <span class="mh">0x06</span>
+    <span class="n">RESET_TIMER</span> <span class="o">=</span> <span class="mh">0x10</span>
+    <span class="n">GET_TIMER</span> <span class="o">=</span> <span class="mh">0x11</span>
+
+
+<span class="k">class</span> <span class="nc">Status</span><span class="p">(</span><span class="n">IntEnum</span><span class="p">):</span>
+    <span class="n">SUCCESS</span> <span class="o">=</span> <span class="mh">0x00</span>
+    <span class="n">INVALID_SEQUENCE</span> <span class="o">=</span> <span class="mh">0x01</span>
+    <span class="n">INVALID_ARGUMENT</span> <span class="o">=</span> <span class="mh">0x02</span>
+    <span class="n">INVALID_PACKET</span> <span class="o">=</span> <span class="mh">0x03</span>
+    <span class="n">NOT_SUPPORTED</span> <span class="o">=</span> <span class="mh">0x04</span>
+    <span class="n">INVALID_COMMAND</span> <span class="o">=</span> <span class="mh">0x05</span>
+    <span class="n">INVALID_DATA</span> <span class="o">=</span> <span class="mh">0x06</span>
+    <span class="n">TIMEOUT</span> <span class="o">=</span> <span class="mh">0x07</span>
+    <span class="n">INVALID_CHECKSUM</span> <span class="o">=</span> <span class="mh">0x08</span>
+    <span class="n">INVALID_API_KEY</span> <span class="o">=</span> <span class="mh">0x09</span>
+    <span class="n">DATASET_FILE_NOT_FOUND</span> <span class="o">=</span> <span class="mh">0x20</span>
+    <span class="n">DATASET_NOT_FOUND</span> <span class="o">=</span> <span class="mh">0x21</span>
+    <span class="n">DATASET_SIZE_NOT_SUPPORTED</span> <span class="o">=</span> <span class="mh">0x22</span>
+    <span class="n">QUERY_SIZE_NOT_SUPPORTED</span> <span class="o">=</span> <span class="mh">0x23</span>
+    <span class="n">DISTANCE_MODE_NOT_SUPPORTED</span> <span class="o">=</span> <span class="mh">0x24</span>
+    <span class="n">QUERY_MODE_NOT_SUPPORTED</span> <span class="o">=</span> <span class="mh">0x25</span>
+    <span class="n">READ_COUNT_NOT_SUPPORTED</span> <span class="o">=</span> <span class="mh">0x26</span>
+    <span class="n">UNKNOWN_ERROR</span> <span class="o">=</span> <span class="mh">0xFF</span>
+
+
+<span class="k">class</span> <span class="nc">Request</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">api_key</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">attribute_0</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">attribute_1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">body_length</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="c1"># Pad the API key out to 8 characters, and only take 8 characters.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">api_key</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">8</span><span class="p">)[</span><span class="mi">0</span><span class="p">:</span><span class="mi">8</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="n">command</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attribute_0</span> <span class="o">=</span> <span class="n">attribute_0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attribute_1</span> <span class="o">=</span> <span class="n">attribute_1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body_length</span> <span class="o">=</span> <span class="n">body_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">body</span>
+
+    <span class="k">def</span> <span class="nf">pack</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Returns the binary representation of this request (as a string).</span>
+<span class="sd">        </span>
+<span class="sd">        The header structure is as follows:</span>
+<span class="sd">           Command      4 bytes</span>
+<span class="sd">           Reserved     4 bytes</span>
+<span class="sd">           Attribute 0  8 bytes</span>
+<span class="sd">           Attribute 1  8 bytes</span>
+<span class="sd">           Body length  8 bytes</span>
+<span class="sd">           API Key      8 bytes (8 characters)</span>
+<span class="sd">           Checksum     4 bytes</span>
+<span class="sd">        </span>
+<span class="sd">        The header is followed by the body of the request, if present.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Pack the message header.        </span>
+        <span class="c1"># &#39;L&#39; is unsigned long (32-bit) and &#39;Q&#39; is unsigned long long (64-bit)</span>
+        <span class="c1"># &#39;LLQQQ&#39; = 2*4 + 3*8 = 32 bytes</span>
+        <span class="n">buf</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;=LLQQQ&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribute_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribute_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">body_length</span><span class="p">)</span>
+
+        <span class="c1"># Add the API key to the header (it&#39;s 8 characters, 8 bytes).</span>
+        <span class="n">buf</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span>
+        
+        <span class="c1"># Add a checksum of the header fields.</span>
+        <span class="n">buf</span> <span class="o">+=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;=L&quot;</span><span class="p">,</span> <span class="n">binascii</span><span class="o">.</span><span class="n">crc32</span><span class="p">(</span><span class="n">buf</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span><span class="p">)</span>
+
+        <span class="c1"># If this request includes a body...</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">body_length</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+            
+            <span class="c1"># For each vector...</span>
+            <span class="k">for</span> <span class="n">vector</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="p">:</span>
+                <span class="c1"># TODO - This doesn&#39;t support numpy arrays.</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                    <span class="c1"># Add each component of the vector to the request.</span>
+                    <span class="c1"># TODO - B is uint8, so this is currently hardcoded to </span>
+                    <span class="c1">#        components of that size.</span>
+                    <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">vector</span><span class="p">:</span>
+                        <span class="n">body</span> <span class="o">+=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">comp</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">vector</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                        <span class="n">body</span> <span class="o">+=</span> <span class="n">vector</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">body</span> <span class="o">+=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="n">vector</span><span class="p">)</span>
+            
+            <span class="c1"># Append a checksum to the end of the body.</span>
+            <span class="n">body</span> <span class="o">+=</span> <span class="n">struct</span><span class="o">.</span><span class="n">pack</span><span class="p">(</span><span class="s2">&quot;=L&quot;</span><span class="p">,</span> <span class="n">binascii</span><span class="o">.</span><span class="n">crc32</span><span class="p">(</span><span class="n">body</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFF</span><span class="p">)</span>
+            <span class="n">buf</span> <span class="o">+=</span> <span class="n">body</span>
+
+        <span class="k">return</span> <span class="n">buf</span>
+
+
+<div class="viewcode-block" id="Response"><a class="viewcode-back" href="../Common.html#Common.Response">[docs]</a><span class="k">class</span> <span class="nc">Response</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class representing a response received from the appliance.</span>
+<span class="sd">    </span>
+<span class="sd">    The response header is 36 bytes:</span>
+<span class="sd">        (4) command</span>
+<span class="sd">        (4) status</span>
+<span class="sd">        (8) attribute_0</span>
+<span class="sd">        (8) attribute_1</span>
+<span class="sd">        (8) body_length</span>
+<span class="sd">        (4) header checksum</span>
+<span class="sd">    </span>
+<span class="sd">    The body is received over the socket separately from the header.</span>
+<span class="sd">    First we receive 36 bytes to receive the header, then this tells us</span>
+<span class="sd">    how many bytes to receive for the body.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="o">=</span><span class="n">Command</span><span class="o">.</span><span class="n">RESET</span><span class="p">,</span> <span class="n">status</span><span class="o">=</span><span class="n">Status</span><span class="o">.</span><span class="n">SUCCESS</span><span class="p">,</span> <span class="n">attribute_0</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">attribute_1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">body_length</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                 <span class="n">body</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="n">command</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="n">status</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attribute_0</span> <span class="o">=</span> <span class="n">attribute_0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attribute_1</span> <span class="o">=</span> <span class="n">attribute_1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body_length</span> <span class="o">=</span> <span class="n">body_length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">checksum</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="o">=</span> <span class="n">body</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">body_checksum</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">unpack_header</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">buffer</span><span class="p">):</span>
+        <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">command</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">status</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribute_0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">attribute_1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">body_length</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">checksum</span><span class="p">)</span> <span class="o">=</span> \
+            <span class="n">struct</span><span class="o">.</span><span class="n">unpack_from</span><span class="p">(</span><span class="s2">&quot;=LLQQQL&quot;</span><span class="p">,</span> <span class="nb">buffer</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Nearist.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
