@@ -27,9 +27,9 @@ import pickle
 import string
 
 # Connection parameters
-api_key = "v5*A2m4d"
-nearist_port = 9857
-nearist_ip = "104.220.153.230"
+api_key = "apikey"
+nearist_port = 5555
+nearist_ip = "000.00.0.0.00.0"
 
 # Filepath parameters 
 path_on_nearist_server = "/nearist/Wikipedia/lsi_index_uint8.h5"
