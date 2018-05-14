@@ -207,9 +207,30 @@ class Client:
         )
         self.__request(request)
 
-    def set_threshold(self, threshold_lower, threshold_upper=None):
+    def set_threshold(self, threshold):
         """
-        Set query threshold for GT/LT/RANGE query mode(s)
+        Set query threshold for GT, LT, or KNN query modes.
+        
+        In GT or KNN_D mode, the appliance will only return results whose 
+        distance is greater than the threshold value.
+
+        In LT or KNN_A mode, the appliance will only return results whose 
+        distance is less than the threshold value.
+        
+        :type threshold: integer
+        :param threshold: The threshold value.
+        """
+        # Construct and issue the set threshold request.
+        request = Request(
+            self.api_key,
+            Command.THRESHOLD,
+            threshold
+        )
+        self.__request(request)        
+        
+    def set_threshold_range(self, threshold_lower, threshold_upper):
+        """
+        Set query threshold for RANGE query mode.
         
         :type threshold_lower: integer
         :param threshold_lower: Lower threshold value.
@@ -218,21 +239,15 @@ class Client:
         :param threshold_upper: Upper threshold value, defaults to None.
          
         """
-
-        if threshold_upper is not None:
-            request = Request(
-                self.api_key,
-                Command.THRESHOLD,
-                threshold_lower,
-                threshold_upper
-            )
-        else:
-            request = Request(
-                self.api_key,
-                Command.THRESHOLD,
-                threshold_lower
-            )
+        request = Request(
+            self.api_key,
+            Command.THRESHOLD,
+            threshold_lower,
+            threshold_upper
+        )
         self.__request(request)
+
+            
 
     def ds_load(self, vectors):
         """
@@ -290,25 +305,56 @@ class Client:
         :param vectors: List of components for single query / List of vectors (component lists) for multipel query
 
         """
-
-        if isinstance(vectors, list):
-            if isinstance(vectors[0], list):
-                request = Request(
-                    self.api_key,
-                    Command.QUERY,
-                    attribute_0=len(vectors[0]),
-                    attribute_1=1,
-                    body_length=len(vectors) * (len(vectors[0])),
-                    body=vectors
-                )
-            else:
-                request = Request(
-                    self.api_key,
-                    Command.QUERY,
-                    attribute_0=len(vectors),
-                    body_length=len(vectors),
-                    body=vectors
-                )
-            return self.__request(request)
-        else:
+        # Validate that 'vectors' is a list.
+        if not isinstance(vectors, list):
             raise ValueError('Invalid argument')
+
+        # ======== Single Query ========
+        # If 'vectors' is just a single query vector...
+        if not isinstance(vectors[0], list):
+            # Construct the query request.
+            request = Request(
+                self.api_key,
+                Command.QUERY,
+                attribute_0=len(vectors),       # Length of a vector
+                body_length=len(vectors),       # Total payload size
+                body=vectors
+            )
+            
+            # Issue the query and return the results.
+            return self.__request(request)
+            
+        # ======== Batch Query ========    
+        # Otherwise, this is a batch query.
+        # We will break the queries into smaller batches and aggregate
+        # the results.
+        
+        start = 0
+        batch_size = 16
+        results = []
+        
+        # For each mini-batch...
+        while start < len(vectors):
+            # Calculate the 'end' of this mini-batch.
+            end = min(start + batch_size, len(vectors))
+
+            # Select the vectors in this mini-batch.
+            mini_batch = vectors[start:end]
+            
+            # Construct the query request.
+            request = Request(
+                self.api_key,
+                Command.QUERY,
+                attribute_0=len(mini_batch[0]),    # Length of a vector
+                attribute_1=1,                     # TODO - Currently unused?
+                body_length=len(mini_batch) * (len(mini_batch[0])), # Total matrix size
+                body=mini_batch 
+            )
+        
+            # Submit the query and wait for the results.
+            mini_res = self.__request(request)
+            
+            # Accumulate the results.
+            results = results + mini_res
+            
+        return results
