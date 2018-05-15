@@ -17,6 +17,33 @@ You'll need the following in order to run the exmaple:
 
 _Make sure to update your copy of the example code with your API key and the provided IP address before running._
 
+### Expected Output
+```
+Connecting to Nearist server...
+    Connection successful.
+
+Loading remote dataset...
+    Done (24 sec)
+
+Loading local dataset files...
+    Done (30 sec)
+
+Finding most similar articles to "Water treatment"...
+    Industrial water treatment
+    Drinking water
+    Reclaimed water
+    Raw water
+    Water chlorination
+    Water bottle
+    Sulfur water
+    Water purification
+    Groundwater pollution
+    Water issues in developing countries
+
+      Observed time: 75 ms
+      Hardware time: 25 ms
+```
+
 ### Required Files
 
 <table>
