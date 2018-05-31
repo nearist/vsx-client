@@ -52,7 +52,7 @@ print '    Connection successful.\n'
 
 # Set this flag to 'True' after the first run of this script so that you don't
 # have to load anything again.
-loaded = True
+loaded = False
 
 if not loaded:
     print 'Loading remote dataset...'
