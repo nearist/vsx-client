@@ -4,6 +4,36 @@
 
 Nearist greatly accelerates big data searches through a revolutionary new hardware platform specifically engineered to handle the computationally demanding task of performing Nearest Neighbor Search on vector representations of content—enabling your search routines to deliver results several orders of magnitude faster than anything else on the market.
 
+## API: At a Glance
+
+Below is the basic usage for starting up the server, loading your data, setting parameters, and returning results.
+
+```python
+ 1: # Import the Python API
+ 2: from nearist import Client 
+ 3: c = Client()
+ 4: 
+ 5: # Open the connection to the hardware (IP, port, API key)
+ 6: c.open("103.210.163.290", 9885, api_key)
+ 7:
+ 8: # Load your dataset into memory on Nearist servers
+ 9: c.load_dataset_file(file_name='dataset.h5', dataset_name='vectors')
+10:
+11: # Set query mode to k-NN
+12: c.set_query_mode(QueryMode.KNN_A)
+13:
+14: # For k-NN, set 'k' neighbor count
+15: c.set_read_count(1)
+16:
+17: # Set distance metric to L1
+18: c.set_distance_mode(DistanceMode.L1)
+19: 
+20: # Load local vectors to be queried against the dataset
+21: query_vectors = load(path='my_local_dataset.h5')[:10] 
+22:
+23: # Submit query vectors and store results
+24: results = c.query(query_vectors)
+```
 
 ## Structure
 This repository contains Nearist's Client API for interacting with Nearist servers remotely, along with example code demonstrating different uses and applications.
