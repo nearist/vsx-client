@@ -4,6 +4,32 @@
 
 Nearist greatly accelerates big data searches through a revolutionary new hardware platform specifically engineered to handle the computationally demanding task of performing Nearest Neighbor Search on vector representations of content—enabling your search routines to deliver results several orders of magnitude faster than anything else on the market.
 
+
+## Structure
+This repository contains Nearist's Client API for interacting with Nearist servers remotely, along with example code demonstrating different uses and applications.
+
+- `/python/src` contains code for connecting to Nearist servers and transforming data into a format compatible with Nearist hardware
+
+The rest of the repository provides example code for applications of Nearist hardware:
+
+- `/datasets` contains code for creating datasets 
+- `/benchmarks` contains code for running and benchmarking Nearest Neighbor searches using traditional hardware 
+- `/python/examples` contains code for running Nearest Neighbor searches using Nearist servers
+
+Please visit the [wiki](https://github.com/nearist/nearist/wiki) for documentation, tutorials, and example applications.
+
+
+## Preliminaries and Installation
+
+You will have to obtain an API key in order to gain access to Nearist servers. 
+
+
+Once you have done this, you can install the client library with pip:
+
+`pip install nearist`
+
+or you can clone this repository. If you choose to clone this repository make sure to add the /python/src/ directory to your PYTHONPATH and to update the scripts in `python/examples` to include the API access key and supplied IP address.
+
 ## API: At a Glance
 
 Below is the basic usage for starting up the server, loading your data, setting parameters, and returning results.
@@ -34,33 +60,6 @@ Below is the basic usage for starting up the server, loading your data, setting 
 23: # Submit query vectors and store results
 24: results = c.query(query_vectors)
 ```
-
-## Structure
-This repository contains Nearist's Client API for interacting with Nearist servers remotely, along with example code demonstrating different uses and applications.
-
-- `/python/src` contains code for connecting to Nearist servers and transforming data into a format compatible with Nearist hardware
-
-The rest of the repository provides example code for applications of Nearist hardware:
-
-- `/datasets` contains code for creating datasets 
-- `/benchmarks` contains code for running and benchmarking Nearest Neighbor searches using traditional hardware 
-- `/python/examples` contains code for running Nearest Neighbor searches using Nearist servers
-
-Please visit the [wiki](https://github.com/nearist/nearist/wiki) for documentation, tutorials, and example applications.
-
-
-
-## Preliminaries and Installation
-
-You will have to obtain an API key in order to gain access to Nearist servers. 
-
-
-
-Once you have done this, you can install the client library with pip:
-
-`pip install nearist`
-
-or you can clone this repository. If you choose to clone this repository make sure to add the /python/src/ directory to your PYTHONPATH and to update the scripts in `python/examples` to include the API access key and supplied IP address.
 
 ## Example: MNIST
 
