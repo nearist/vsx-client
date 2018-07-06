@@ -6,12 +6,14 @@ Created on Thu Sep 28 14:23:41 2017
 """
 
 import sys
-sys.path.append('../../src/')
-
 from Client import *
 import h5py
 import time
 
+# NOTE - These values should be updated with the ones you received.
+api_key = ""
+nearist_port = 0
+nearist_ip = "0.0.0.0"
 
 ###########################################################################
 #    Load the dataset into CPU memory
@@ -25,7 +27,6 @@ h5f = h5py.File('./data/Google_word2vec_analogies_uint8_8std.h5', 'r')
 # Load the dataset completely into memory--the slice operator at the end tells
 # h5py how much of the matrix to load into memory, [:] loads the whole thing.
 query_vecs = h5f['query_vecs'][:]
-word_vecs = h5f['word_vecs'][:]
 abc_i = h5f['abc_i'][:]
 d_i = h5f['d_i'][:]
 
@@ -36,13 +37,13 @@ d_i = h5f['d_i'][:]
 print 'Connecting to Nearist board...'
 sys.stdout.flush()
 
+# Establish a connection to the appliance.  
 c = Client()
-c.open("000.000.0.00", 5555)
+c.open(nearist_ip, nearist_port, api_key)
 
-c.reset()
-
-c.set_distance_mode(DistanceMode.L1)
-c.set_query_mode(QueryMode.KNN_A)
+# We're using L1 distance with a k-NN search.
+c.set_distance_mode(Common.DistanceMode.L1)
+c.set_query_mode(Common.QueryMode.KNN_A)
 
 # For the analogies experiment, we want the top four matches.
 c.set_read_count(4)
@@ -51,84 +52,84 @@ c.set_read_count(4)
 #    Load the dataset into the Nearist board
 ###########################################################################
 
-print 'Loading dataset into Nearist hardware...'
+print("Loading dataset vectors from appliance harddisk...")
 sys.stdout.flush()
 
 # Time this step.
 t0 = time.time()
+    
+# Load the training vectors *remotely* from the appliance harddisk.
+c.load_dataset_file(file_name='/nearist/Google_word2vec_analogies/Google_word2vec_analogies_uint8_8std.h5',
+                    dataset_name='word_vecs')
 
-# Load the word vectors.
-c.ds_load(word_vecs.tolist())
 
 # Measure elapsed time.
 elapsed = time.time() - t0
 
 print '   Done. Loading took %.0f seconds.' % elapsed
+sys.stdout.flush()
 
 ###########################################################################
 #    Perform Analogies Test Queries
-##########################################################################
+###########################################################################
 
 num_right = 0
 
-num_queries = query_vecs.shape[0]
-
-# NearestNeighbors is more efficient when given multiple queries to work
-# on simultaneously. This batch size is somewhat arbitrary--we haven't
-# experimented with this parameter.
-batch_size = 128
-
-print 'Performing all', num_queries, ' queries...'
+print 'Performing all', query_vecs.shape[0], ' queries...'
 sys.stdout.flush()
+
+# Reset the hardware timer.
+c.reset_timer()
 
 # Record the start time.
 t0 = time.time()
 
-# For each batch of query vectors...
-for i in range(0, num_queries, batch_size):
+# Find the nearest neighbors for all queries in this batch.
+# The query call will break the queries into smaller batches and report
+# progress.
+batch_results = c.query(query_vecs.tolist(), batch_size=500, verbose=True)
 
-    # Calculate the index of the last vector in this query batch.
-    end_i = min(i + batch_size, num_queries)
+# Get the total elapsed time (including internet overhead) in ms.
+wall_time = (time.time() - t0) * 1000.0
 
-    # Progress update.
-    if not i == 0:
-        # Estimate how much time is left to complete the test.
-        queries_per_sec = ((time.time() - t0)  / i)
-        time_est = queries_per_sec * (num_queries - i) / 60.0
+# Get only the time spent on the appliance. Convert from nanoseconds to ms.
+hw_time = c.get_timer_value() / 1E6
 
+print '%22s %.0f ms' % ('Observed time:', wall_time)
+print '%20s %.0f ms for %d queries' % ('Hardware time:', hw_time, query_vecs.shape[0])
+print '%20s %.0f ms' % ('Average hw latency:', hw_time / query_vecs.shape[0])
+print '%20s %.0f%%' % ('Internet Overhead:', (wall_time - hw_time) * 100.0 / float(hw_time))
 
-        print 'Query %5d / %5d (%.0f%%) Time Remaining:~%.0f min....' % (i, num_queries, float(i) / num_queries * 100.0, time_est)
-        sys.stdout.flush()
+###########################################################################
+#    Score the Results
+###########################################################################
 
-    # Find the nearest neighbors for all queries in this batch.
-    batch_results = c.query(query_vecs[i:end_i, :].tolist())
+# Score the results.
+for j in range(0, len(batch_results)):
+    
+    # Get the results for query number 'j'.
+    results = batch_results[j]
 
-    # Loop over the batch results.
-    for j in range(0, len(batch_results)):
-        # Get the results for query number (i + j)
-        results = batch_results[j]
+    assert(len(results) == 4)
 
-        assert(len(results) == 4)
+    # Check the results. The correct answer is word 'd', but it's possible that
+    # words 'a', 'b', and 'c' will appear in these results--we ignore these and
+    # they don't count against accuracy. However, if any word other than 'a',
+    # 'b', or 'c' is ranked higher than 'd', then the analogy has failed.
+    for r in results:
+       # If we encounter the correct index, we got it right.
+       if r['ds_id'] == d_i[j]:
+           num_right += 1
+           break
+       # If the result is either a, b, or c (the input words used
+       # to form the query), then ignore it.
+       elif r['ds_id'] in abc_i[j, :]:
+           continue
+       # If the result isn't a, b, c, or d, then it's wrong.
+       else:
+           break
 
-        # Look through the four results...
-        for r in results:
-           # If we encounter the correct index, we got it right.
-           if r['ds_id'] == d_i[i + j]:
-               num_right += 1
-               break
-           # If the result is either a, b, or c (the input words used
-           # to form the query), then ignore it.
-           elif r['ds_id'] in abc_i[i + j, :]:
-               continue
-           # If the result isn't a, b, c, or d, then it's wrong.
-           else:
-               break
-
-
-elapsed = time.time() - t0
-
-print 'Done, %.0f seconds' % elapsed
-
+# Calculate our accuracy.
 accuracy = float(num_right) / float(query_vecs.shape[0]) * 100.0
 
 print 'Final accuracy %.2f%% (%d / %d)' % (accuracy, num_right, query_vecs.shape[0])
