@@ -2,7 +2,8 @@ import json
 
 from Common import *
 import socket
-
+import sys
+import time
 
 class Client:
     """
@@ -297,7 +298,7 @@ class Client:
         )
         self.__request(request)
 
-    def query(self, vectors):
+    def query(self, vectors, batch_size=128, verbose=True):
         """
         Query for single/multiple vector(s)
         
@@ -330,8 +331,10 @@ class Client:
         # the results.
         
         start = 0
-        batch_size = 16
         results = []
+        
+        # Record the start time.
+        t0 = time.time()
         
         # For each mini-batch...
         while start < len(vectors):
@@ -340,6 +343,25 @@ class Client:
 
             # Select the vectors in this mini-batch.
             mini_batch = vectors[start:end]
+
+            # Progress update.
+            if verbose and not start == 0:
+                # Caclulate the average throughput so far.
+                queries_per_sec = ((time.time() - t0)  / start)
+                
+                # Estimate how much time (in minutes) is left to complete the 
+                # test.
+                time_est = queries_per_sec * (len(vectors) - start) / 60.0
+                
+                # Format the estimated time remaining into minutes.
+                # If it's less than 1 minute, show <1 instead of 0.
+                if time_est < 1:
+                    time_est_str = '<1 min...'
+                else:
+                    time_est_str = '~%.0f min...'
+
+                print '  Query %5d / %5d (%.0f%%) Time Remaining: %s' % (start, len(vectors), float(start) / len(vectors) * 100.0, time_est_str)    
+                sys.stdout.flush()
             
             # Construct the query request.
             request = Request(
@@ -353,8 +375,15 @@ class Client:
         
             # Submit the query and wait for the results.
             mini_res = self.__request(request)
+
+            if not len(mini_batch) == len(mini_res):
+                print 'ERROR: Mini batch length %d does not match results legnth %d!' % (len(mini_batch), len(mini_res))
+                sys.stdout.flush()
             
             # Accumulate the results.
             results = results + mini_res
+            
+            # Update the start pointer.
+            start = end
             
         return results
