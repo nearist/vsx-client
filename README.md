@@ -19,11 +19,9 @@ The rest of the repository provides example code for applications of Nearist har
 Please visit the [wiki](https://github.com/nearist/nearist/wiki) for documentation, tutorials, and example applications.
 
 
-
 ## Preliminaries and Installation
 
 You will have to obtain an API key in order to gain access to Nearist servers. 
-
 
 
 Once you have done this, you can install the client library with pip:
@@ -31,6 +29,37 @@ Once you have done this, you can install the client library with pip:
 `pip install nearist`
 
 or you can clone this repository. If you choose to clone this repository make sure to add the /python/src/ directory to your PYTHONPATH and to update the scripts in `python/examples` to include the API access key and supplied IP address.
+
+## API: At a Glance
+
+Below is the basic usage for starting up the server, loading your data, setting parameters, and returning results.
+
+```python
+ 1: # Import the Python API
+ 2: from nearist import Client 
+ 3: c = Client()
+ 4: 
+ 5: # Open the connection to the hardware (IP, port, API key)
+ 6: c.open("103.210.163.290", 9885, api_key)
+ 7:
+ 8: # Load your dataset into memory on Nearist servers
+ 9: c.load_dataset_file(file_name='dataset.h5', dataset_name='vectors')
+10:
+11: # Set query mode to k-NN
+12: c.set_query_mode(QueryMode.KNN_A)
+13:
+14: # For k-NN, set 'k' neighbor count
+15: c.set_read_count(1)
+16:
+17: # Set distance metric to L1
+18: c.set_distance_mode(DistanceMode.L1)
+19: 
+20: # Load local vectors to be queried against the dataset
+21: query_vectors = load(path='my_local_dataset.h5')[:10] 
+22:
+23: # Submit query vectors and store results
+24: results = c.query(query_vectors)
+```
 
 ## Example: MNIST
 

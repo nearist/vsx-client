@@ -128,7 +128,7 @@ class Transforms:
         """
 
         # Check that all the values are positive
-        assert data.all() >= 0, "The logarithmic transform requires that your data is \
+        assert X.all() >= 0, "The logarithmic transform requires that your data is \
         greater than or equal to zero. Please check that your data is greater than or \
         equal to zero before continuing."
 

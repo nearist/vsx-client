@@ -1,17 +1,23 @@
 """
+Purpose:
 
-To run:
-- python query_wikipedia_titles.py Query
+This code returns the titles of the 10 most similar wikipedia articles against a 
+given query wikipedia article title as measured by L1 distance.
 
-Parameters
-    ----------
-    Query : The name of a wikipedia article title. Titles are capitalized, and typically 
-    each word of a multiword title is capitalizaed.
-        
-Returns
-    -------
-	The titles of the ten most similar wikipedia articles, as measured by L1 distance.
-	
+
+
+Suggested use:
+
+Copy code into an IDE that keeps variables in memory (Spyder, Jupyter, etc.). This way,
+the datasets in memory and connection to Nearist server will persist while you 
+iteratively search new query terms and adjust parameters.
+
+
+
+Query term: 
+
+The name of a wikipedia article title. Titles are capitalized, and typically 
+each word of a multiword title is capitalizaed. Refer to wikipedia article titles online.
 
 """
 ################################################################################
@@ -23,7 +29,9 @@ import h5py
 import time
 import sys
 import pickle
-import string
+
+# Wikipedia article title 
+query_term = "Crocodile"
 
 # Connection parameters
 api_key = "apikey"
@@ -44,7 +52,7 @@ print '    Connection successful.\n'
 
 # Set this flag to 'True' after the first run of this script so that you don't
 # have to load anything again.
-loaded = True
+loaded = False
 
 if not loaded:
     print 'Loading remote dataset...'
@@ -109,6 +117,3 @@ def main(query_term):
     print '\n%20s %.0f ms' % ('Observed time:', wall_time)
     print '%20s %.0f ms' % ('Hardware time:', hw_time)
     
-if __name__ == "__main__":
-    query = string.join(sys.argv[1:])
-    main(query)
