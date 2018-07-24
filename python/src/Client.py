@@ -360,7 +360,7 @@ class Client:
                 else:
                     time_est_str = '~%.0f min...' % time_est
 
-                print '  Query %5d / %5d (%.0f%%) Time Remaining: %s' % (start, len(vectors), float(start) / len(vectors) * 100.0, time_est_str)    
+                print '  Query %5d / %5d (%3.0f%%) Time Remaining: %s' % (start, len(vectors), float(start) / len(vectors) * 100.0, time_est_str)    
                 sys.stdout.flush()
             
             # Construct the query request.
