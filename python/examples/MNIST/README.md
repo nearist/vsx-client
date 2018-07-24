@@ -35,16 +35,15 @@ You'll need the following in order to run the exmaple:
 _Make sure to update your copy of the example code with your API key and the provided IP address before running. Additionally, be sure to add /python/src/ to your PYTHONPATH._
 
 ### Required Files
-In order to run the example `run_classification.py`, you will need the files listed below. See `/datasets/MNIST/` for how to create these files.
+In order to run the example `run_classification.py`, you will need the files listed below, which are available to download from [here](https://drive.google.com/drive/folders/1tr-q_uhg6PVuQKIwnLDRMtRsrG2oyS8C). 
+
+You can also look in `/datasets/MNIST/` to see how this dataset was generated.
 
 Note that the `X_train_int.h5` file is already stored on the appliance server (since it's one of our examples), so you don't need to download it to your laptop. Instead, the example loads it remotely for you.
 
-
 <table>
   <tr>  <th>File</th>               <th>Dimensions</th>    <th>Component Size</th>  <th>Size</th> <th>Description</th>  </tr>
-  <tr>  <td>X_train_float.h5</td>   <td>55000 x 1024</td>  <td>float</td>  <td>225.8 MB</td>  <td>Extracted feature vectors for training images.</td>  </tr>
   <tr>  <td>y_train.h5</td>         <td>55000 x 1</td>     <td>int</td>    <td>0.2 MB</td>  <td>Labels (0 - 9) for training images.</td>  </tr>
-  <tr>  <td>X_test_float.h5</td>    <td>10000 x 1024</td>  <td>float</td>  <td>39 MB</td>   <td>Extracted feature vectors for test images.</td>  </tr>
   <tr>  <td>y_test.h5</td>          <td>10000 x 1</td>     <td>int</td>    <td>0.1 MB</td>  <td>Labels (0 - 9) for test images.</td>  </tr>
   <tr>  <td>X_train_uint8.h5</td>     <td>55000 x 1024</td>  <td>int</td>  <td>56.3 MB</td>  <td>Training vectors with integer components.</td>  </tr>
   <tr>  <td>X_test_uint8.h5</td>      <td>10000 x 1024</td>  <td>int</td>  <td>10.2 MB</td>  <td>Test vectors with integer components.</td>  </tr>
