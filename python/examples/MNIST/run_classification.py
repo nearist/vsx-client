@@ -1,7 +1,13 @@
-from Client import *
+from Client import Client
+import Common
+
 import time
 import h5py
 import sys
+
+api_key = ""
+nearist_port = 0
+nearist_ip = ""
 
 def main():
 
@@ -40,12 +46,12 @@ def main():
     
     # Establish a connection to the appliance.  
     # NOTE - These values should be updated with the ones you received.
-    c.open(host='000.000.000.000', port=0, api_key='')
+    c.open(nearist_ip, nearist_port, api_key)
 
     c.reset()
 
-    c.set_distance_mode(DistanceMode.L1)
-    c.set_query_mode(QueryMode.KNN_A)
+    c.set_distance_mode(Common.DistanceMode.L1)
+    c.set_query_mode(Common.QueryMode.KNN_A)
     c.set_read_count(k)
 
     ###########################################################################
@@ -72,14 +78,31 @@ def main():
     print("\nRunning %d-NN Classification..." % k)
     sys.stdout.flush()
 
-    # Perform the queries.    
-    result_batch = c.query(X_test.tolist())
+    c.reset_timer()
+    t0 = time.time()
 
+    # Perform the queries.    
+    result_batch = c.query(X_test.tolist(), batch_size=1024)
+
+    # Get the total elapsed time (including internet overhead in ms)
+    wall_time = (time.time() - t0) * 1000.0
+    
+    # Get only the time spent on the appliance. Convert from nanoseconds to ms.
+    hw_time = c.get_timer_value() / 1E6
+    
+    print '%22s %.0f ms' % ('Observed time:', wall_time)
+    print '%20s %.0f ms for %d queries' % ('Hardware time:', hw_time, len(result_batch))
+    print '%20s %.0f ms' % ('Average hw latency:', hw_time / len(result_batch))
+    print '%20s %.0f%%' % ('Internet Overhead:', (wall_time - hw_time) * 100.0 / float(hw_time))
+    
     numRight = 0
 
     # For each of the query vectors...
-    for query_results in result_batch:
+    for i in range(0, len(result_batch)): 
 
+        # Get the results for the next query.
+        query_results = result_batch[i]
+        
         # Reset class tallies
         arrNumClass = [0] * 10
 
