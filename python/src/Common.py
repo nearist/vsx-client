@@ -174,7 +174,7 @@ class Request:
         buf = struct.pack("=LLQQQ", self.command, 0, self.attribute_0, self.attribute_1, self.body_length)
 
         # Add the API key to the header (it's 8 characters, 8 bytes).
-        buf += self.api_key
+        buf += format(self.api_key).encode()
         
         # Add a checksum of the header fields.
         buf += struct.pack("=L", binascii.crc32(buf) & 0xFFFFFFFF)
@@ -190,6 +190,8 @@ class Request:
                     # Add each component of the vector to the request.
                     # TODO - B is uint8, so this is currently hardcoded to 
                     #        components of that size.
+                    if(isinstance(body,str)):
+                        body = format(body).encode() # this may not work for batch queries this needs to be done before entering the loop
                     for comp in vector:
                         body += struct.pack("B", comp)
                 else:
@@ -197,10 +199,10 @@ class Request:
                         body += vector
                     else:
                         body += struct.pack("B", vector)
-            
-            # Append a checksum to the end of the body.
-            body += struct.pack("=L", binascii.crc32(body) & 0xFFFFFFFF)
-            buf += body
+            if isinstance(body, str):
+                body = format(body).encode()
+            # Append the body and a checksum of it to the end of the buffer.
+            buf = buf + body + struct.pack("=L", binascii.crc32(body) & 0xFFFFFFFF) #this line is correct
 
         return buf
 

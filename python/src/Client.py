@@ -53,7 +53,6 @@ class Client:
     def __init__(self):
         self.sock = None
         
-
     @staticmethod
     def __recvall(sock, length):
         # Helper function to recv 'length' bytes or return None if EOF is hit.
@@ -300,8 +299,6 @@ class Client:
         )
         self.__request(request)
 
-            
-
     def ds_load(self, vectors):
         """
         Load dataset to Nearist appliance
@@ -339,7 +336,7 @@ class Client:
 
         """
 
-        root = json.dumps({"fileName": file_name, "datasetName": dataset_name})
+        root = json.dumps({"datasetName": dataset_name, "fileName": file_name})
         request = Request(
             self.api_key,
             Command.DS_LOAD,
@@ -436,7 +433,7 @@ class Client:
                 else:
                     time_est_str = '~%.0f min...' % time_est
 
-                print '  Query %5d / %5d (%3.0f%%) Time Remaining: %s' % (start, len(vectors), float(start) / len(vectors) * 100.0, time_est_str)
+                print ('  Query %5d / %5d (%3.0f%%) Time Remaining: %s' % (start, len(vectors), float(start) / len(vectors) * 100.0, time_est_str))
                 sys.stdout.flush()
 
             # Construct the query request.
@@ -453,7 +450,7 @@ class Client:
             mini_res = self.__request(request)
 
             if not len(mini_batch) == len(mini_res):
-                print 'ERROR: Mini batch length %d does not match results legnth %d!' % (len(mini_batch), len(mini_res))
+                print ('ERROR: Mini batch length %d does not match results legnth %d!' % (len(mini_batch), len(mini_res)))
                 sys.stdout.flush()
 
             # Accumulate the results.

@@ -1,13 +1,14 @@
+import sys
 from Client import Client
 import Common
 
 import time
 import h5py
-import sys
 
-api_key = ""
-nearist_port = 0
-nearist_ip = ""
+# Connection parameters
+api_key = "apikey"
+nearist_port = 5555
+nearist_ip = "000.00.0.0.00.0"
 
 def main():
 
@@ -90,10 +91,10 @@ def main():
     # Get only the time spent on the appliance. Convert from nanoseconds to ms.
     hw_time = c.get_timer_value() / 1E6
     
-    print '%22s %.0f ms' % ('Observed time:', wall_time)
-    print '%20s %.0f ms for %d queries' % ('Hardware time:', hw_time, len(result_batch))
-    print '%20s %.0f ms' % ('Average hw latency:', hw_time / len(result_batch))
-    print '%20s %.0f%%' % ('Internet Overhead:', (wall_time - hw_time) * 100.0 / float(hw_time))
+    print ('%22s %.0f ms' % ('Observed time:', wall_time))
+    print ('%20s %.0f ms for %d queries' % ('Hardware time:', hw_time, len(result_batch)))
+    print ('%20s %.0f ms' % ('Average hw latency:', hw_time / len(result_batch)))
+    print ('%20s %.0f%%' % ('Internet Overhead:', (wall_time - hw_time) * 100.0 / float(hw_time)))
     
     numRight = 0
 
@@ -120,7 +121,7 @@ def main():
 
         # Check if we predicted the right class.
         if (p == y_test[i]):
-            numRight += 1;
+            numRight += 1
 
     # Calculate the elapsed time (in seconds)
     elapsed = (time.time() - t0)

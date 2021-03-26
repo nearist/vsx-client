@@ -31,13 +31,13 @@ if init:
     # from the command line.
     script_name, model_path, analogies_path = argv
     
-    print 'Loading word2vec model...'
+    print ('Loading word2vec model...')
     sys.stdout.flush()
     
     # Load Google's pre-trained Word2Vec model.
     model = gensim.models.Word2Vec.load_word2vec_format(model_path, binary=True)  
     
-    print 'Normalizing all word vectors...'
+    print ('Normalizing all word vectors...')
     sys.stdout.flush()
     
     # Normalize all word vectors. Replace the original vectors to save memory.
@@ -47,7 +47,7 @@ if init:
 #  Parse Analogies
 ##############################################################################
 
-print 'Reading in analogies...'
+print ('Reading in analogies...')
 sys.stdout.flush()
 
 # Count the number of analogies in the file.
@@ -62,7 +62,7 @@ with open(analogies_path, 'rb') as f:
         
         num_analogies += 1
 
-print '    There are', num_analogies, 'analogies.'
+print ('    There are', num_analogies, 'analogies.')
 
 # Read in the analogies.
 
@@ -93,7 +93,7 @@ with open(analogies_path, 'rb') as f:
         # Increment the row number.
         analogy_num += 1            
 
-print 'Validating indeces...'
+print ('Validating indeces...')
 sys.stdout.flush()
 
 # Verify no entries are zero.        
@@ -103,7 +103,7 @@ assert(np.count_nonzero(analogies) == (analogies.shape[0] * analogies.shape[1]))
 #  Precompute Query Vectors
 ##############################################################################
 
-print 'Computing analogy query vectors...'
+print ('Computing analogy query vectors...')
 sys.stdout.flush()
 
 # Create a matrix to hold all of the query vectors.
@@ -129,7 +129,7 @@ for i in range(0, num_analogies):
 #  Save dataset to HDF5 file.
 ##############################################################################
 
-print 'Writing dataset to disk...'
+print ('Writing dataset to disk...')
 sys.stdout.flush()
 
 h5f = h5py.File('./data/Google_word2vec_analogies.h5', 'w')

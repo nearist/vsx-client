@@ -38,33 +38,34 @@ api_key = "apikey"
 nearist_port = 5555
 nearist_ip = "000.00.0.0.00.0"
 
+
 # Filepath parameters 
 path_on_nearist_server = "/nearist/Wikipedia/lsi_index_uint8.h5"
 path_on_local_drive = './wiki_data/lsi_index_uint8.h5'
 path_to_titles = "./wiki_data/titles_to_id.pickle"
 
 # Establish connection
-print 'Connecting to Nearist server...'
+print ('Connecting to Nearist server...')
 sys.stdout.flush()
 c = Client()
 c.open(nearist_ip, nearist_port, api_key)
-print '    Connection successful.\n'
+print ('    Connection successful.\n')
 
 # Set this flag to 'True' after the first run of this script so that you don't
 # have to load anything again.
 loaded = False
 
 if not loaded:
-    print 'Loading remote dataset...'
+    print ('Loading remote dataset...')
     sys.stdout.flush()
 
     # Load dataset in Nearist server
     t0 = time.time()
     c.load_dataset_file(file_name=path_on_nearist_server, dataset_name='lsi')
 
-    print '    Done (%.0f sec)\n' % (time.time() - t0)
+    print ('    Done (%.0f sec)\n' % (time.time() - t0))
 
-    print 'Loading local dataset files...'
+    print ('Loading local dataset files...')
     sys.stdout.flush()
     
     t0 = time.time()
@@ -77,7 +78,7 @@ if not loaded:
     h5f = h5py.File(path_on_local_drive, 'r')
     vecs = h5f['lsi'][:]
 
-    print '    Done (%.0f sec)\n' % (time.time() - t0)
+    print ('    Done (%.0f sec)\n' % (time.time() - t0))
     sys.stdout.flush()
 
 
@@ -95,7 +96,7 @@ def main(query_term):
     query_id = title_to_id[query_term]
     query_vec = list(vecs[query_id])
 
-    print 'Finding most similar articles to "%s"...' % query_term
+    print ('Finding most similar articles to "%s"...' % query_term)
     
     # We'll measure the latency, with and without internet overhead.
     c.reset_timer()
@@ -114,6 +115,6 @@ def main(query_term):
         print ('    ' + id_to_title[i['ds_id']])
 
     # Report the latency. 
-    print '\n%20s %.0f ms' % ('Observed time:', wall_time)
-    print '%20s %.0f ms' % ('Hardware time:', hw_time)
+    print ('\n%20s %.0f ms' % ('Observed time:', wall_time))
+    print ('%20s %.0f ms' % ('Hardware time:', hw_time))
     
