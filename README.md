@@ -23,7 +23,7 @@ You will have to obtain an API key in order to gain access to Nearist servers. p
 
 Along side this, you can install the client library by cloning it into your project folder.
 
-Dont forget to add the /python/src/ directory to your PYTHONPATH and to update the scripts in `python/examples` to include the supplied API access key and IP address.
+Dont forget to add the /python/src/ directory to your PYTHONPATH and to update the scripts in `python/examples` to include the supplied API access key and IP address. Also do not forget to double check the filepath to the datasets that you download or create.
 
 Also note that the API has no special dependencies but if you are working with datasets compatible with our hardware you will need to have h5py and numpy installed. In addition you will likely need your feature extraction algorithm installed to create queries and/or datasets whether that be BERT, LSI, Annoy, or a custom built option through pytorch or tensorflow.  
 
@@ -65,6 +65,8 @@ Below is the basic usage for starting up the server, loading your data, setting 
 ## Example: MNIST
 
 To show how Nearist works, we will run through the provided code to perform Nearest Neighbors classification of the MNIST dataset. 
+
+!NOTE: currently the MNIST dataset creation software uses a very out of date version of tensorflow. please download the dataset from the link below for the time being.
 
 The `/datasets/MNIST/` directory contains instructions and code for generating the data that we will run on Nearist hardware. (Alternatively, you can skip this step and download the generated datasets directly from [here](https://drive.google.com/drive/folders/1tr-q_uhg6PVuQKIwnLDRMtRsrG2oyS8C)). The README explains that we first train a convolutional neural network on the MNIST image classification task, and then use the trained network to transform raw images into 1024-dimensional vectors. We then convert these vectors of float data into vectors of integer data for use on Nearist hardware. This is accomplished by running:
 
