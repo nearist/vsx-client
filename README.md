@@ -1,7 +1,5 @@
 
 
-![alt text](http://nearist.sightbox.io/wp-content/uploads/2017/04/nearist.svg)
-
 Nearist greatly accelerates big data searches through a revolutionary new hardware platform specifically engineered to handle the computationally demanding task of performing Nearest Neighbor Search on vector representations of content—enabling your search routines to deliver results several orders of magnitude faster than anything else on the market.
 
 
@@ -12,23 +10,26 @@ This repository contains Nearist's Client API for interacting with Nearist serve
 
 The rest of the repository provides example code for applications of Nearist hardware:
 
+- `/python/examples` contains code for running Nearest Neighbor searches using Nearist servers
 - `/datasets` contains code for creating datasets 
 - `/benchmarks` contains code for running and benchmarking Nearest Neighbor searches using traditional hardware 
-- `/python/examples` contains code for running Nearest Neighbor searches using Nearist servers
 
 Please visit the [wiki](https://github.com/nearist/nearist/wiki) for documentation, tutorials, and example applications.
 
 
 ## Preliminaries and Installation
 
-You will have to obtain an API key in order to gain access to Nearist servers. 
+You will have to obtain an API key in order to gain access to Nearist servers. please reach out via email if you are interested, [matt.mccormick@nearist.ai](matt.mccormick@nearist.ai). 
 
+Along side this, you can install the client library by cloning it into your project folder.
 
-Once you have done this, you can install the client library with pip:
+Dont forget to add the /python/src/ directory to your PYTHONPATH and to update the scripts in `python/examples` to include the supplied API access key and IP address.
 
-`pip install nearist`
+Also note that the API has no special dependencies but if you are working with datasets compatible with our hardware you will need to have h5py and numpy installed. In addition you will likely need your feature extraction algorithm installed to create queries and/or datasets whether that be BERT, LSI, Annoy, or a custom built option through pytorch or tensorflow.  
 
-or you can clone this repository. If you choose to clone this repository make sure to add the /python/src/ directory to your PYTHONPATH and to update the scripts in `python/examples` to include the API access key and supplied IP address.
+Tested using conda on 3.8.5
+
+!TODO update pip package
 
 ## API: At a Glance
 
